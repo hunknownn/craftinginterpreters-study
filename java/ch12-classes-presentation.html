@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ch12 — Classes</title>
+<style>
+:root{
+  --bg:#0e1016; --panel:#191c26; --panel2:#212533; --border:#2a2f3e;
+  --primary:#5aa2ff; --accent:#ffb454; --ok:#3ddc97; --danger:#ff6b6b;
+  --purple:#b48cff; --text:#e6e9f0; --muted:#8b93a7;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:
+    radial-gradient(1200px 700px at 80% -10%, rgba(90,162,255,.10), transparent 60%),
+    radial-gradient(1000px 600px at -10% 110%, rgba(180,140,255,.10), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:-apple-system,"Segoe UI","Apple SD Gothic Neo",sans-serif;
+  line-height:1.6; overflow:hidden;
+}
+code,.mono{font-family:"SF Mono",Menlo,monospace;}
+
+.deck{height:100vh; display:flex; align-items:center; justify-content:center; padding:46px;}
+.slide{
+  display:none; width:100%; max-width:1000px; max-height:100%; overflow:auto;
+  animation:fade .35s ease;
+}
+.slide.active{display:block;}
+@keyframes fade{from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:none;}}
+
+h1{font-size:40px; margin:0 0 12px; line-height:1.2;}
+h2{font-size:27px; margin:0 0 18px; border-left:4px solid var(--primary); padding-left:14px;}
+h3{font-size:18px; margin:20px 0 8px; color:var(--accent);}
+p,li{font-size:16px;}
+.sub{color:var(--muted); font-size:17px; margin:0 0 26px;}
+.lead{font-size:19px; color:var(--text);}
+ul{margin:8px 0; padding-left:22px;} li{margin:7px 0;}
+.muted{color:var(--muted);} .ok{color:var(--ok);} .acc{color:var(--accent);} .pp{color:var(--purple);} .dg{color:var(--danger);} .pr{color:var(--primary);}
+
+.codebox{background:#0a0c12; border:1px solid var(--border); border-radius:12px; padding:16px 18px; font-family:"SF Mono",Menlo,monospace; font-size:14px; overflow:auto; white-space:pre; margin:14px 0;}
+.kw{color:#ff7b9c;} .ty{color:#6fdcff;} .st{color:#9be29b;} .cm{color:#6b7280;} .fn{color:#ffd28a;} .nm{color:#ffb454;}
+
+.panel{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px 20px; margin:12px 0;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+@media(max-width:860px){.grid2{grid-template-columns:1fr;}}
+.tag{display:inline-block; background:var(--panel2); border:1px solid var(--border); border-radius:999px; padding:4px 13px; font-size:13px; color:var(--accent); margin:0 6px 6px 0;}
+.note{border-left:3px solid var(--accent); background:rgba(255,180,84,.08); padding:11px 15px; border-radius:0 8px 8px 0; margin:14px 0; font-size:15px;}
+.warn{border-left:3px solid var(--danger); background:rgba(255,107,107,.08); padding:11px 15px; border-radius:0 8px 8px 0; margin:14px 0; font-size:15px;}
+.good{border-left:3px solid var(--ok); background:rgba(61,220,151,.08); padding:11px 15px; border-radius:0 8px 8px 0; margin:14px 0; font-size:15px;}
+
+.pipe{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center; margin:26px 0;}
+.pnode{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:11px 15px; font-size:14px; text-align:center; min-width:120px;}
+.pnode b{display:block; color:var(--accent); font-size:13px; margin-bottom:2px;}
+.pnode.on{border-color:var(--primary); box-shadow:0 0 0 1px var(--primary) inset;}
+.parr{color:var(--muted); font-size:20px;}
+
+.chain{display:flex; flex-direction:column; gap:8px; margin:14px 0;}
+.env{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:10px 14px; font-size:14px;}
+.env b{color:var(--purple);}
+.envarr{text-align:center; color:var(--muted); font-size:13px;}
+
+.kbd{display:inline-block; background:var(--panel2); border:1px solid var(--border); border-bottom-width:2px; border-radius:6px; padding:1px 8px; font-size:13px; font-family:"SF Mono",Menlo,monospace;}
+
+.title-wrap{text-align:center;}
+.title-wrap .badge{display:inline-block; background:rgba(90,162,255,.14); border:1px solid var(--primary); color:var(--primary); border-radius:999px; padding:6px 18px; font-size:15px; margin-bottom:22px; letter-spacing:.5px;}
+.title-wrap .meta{color:var(--muted); margin-top:26px; font-size:15px;}
+
+.bar{position:fixed; bottom:0; left:0; right:0; height:5px; background:var(--panel2);}
+.bar i{display:block; height:100%; background:linear-gradient(90deg,var(--primary),var(--purple)); transition:width .3s;}
+.pageno{position:fixed; bottom:16px; right:20px; color:var(--muted); font-size:13px; font-family:"SF Mono",Menlo,monospace;}
+.nav{position:fixed; bottom:14px; left:20px; display:flex; gap:8px;}
+.nav button{background:var(--panel2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:7px 14px; font-size:14px; cursor:pointer;}
+.nav button:hover{border-color:var(--primary);}
+.hint{position:fixed; top:14px; right:18px; color:var(--muted); font-size:12px;}
+
+/* PDF 출력: 모든 슬라이드를 한 장씩 펼쳐 16:9 페이지로 */
+@media print{
+  @page{ size:1280px 720px; margin:0; }
+  html,body{ overflow:visible !important; height:auto !important;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .deck{ display:block; height:auto; padding:0; }
+  .slide{ display:block !important; animation:none;
+    width:1280px; max-width:none; height:720px; max-height:none;
+    overflow:hidden; padding:56px 70px;
+    page-break-after:always; break-after:page; }
+  .slide:last-child{ page-break-after:auto; break-after:auto; }
+  .nav,.pageno,.bar,.hint{ display:none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="deck">
+
+  <!-- 1. 타이틀 -->
+  <section class="slide active">
+    <div class="title-wrap">
+      <span class="badge">Crafting Interpreters · Chapter 12</span>
+      <h1>Classes</h1>
+      <p class="lead muted">Lox에 객체지향을 더하다 — 클래스 선언, 인스턴스, 필드, 메서드, <span class="pp">this</span>, 생성자</p>
+      <p class="meta">jlox · Java tree-walking interpreter</p>
+    </div>
+  </section>
+
+  <!-- 2. 무엇을 만드나 -->
+  <section class="slide">
+    <h2>이 장에서 만드는 것</h2>
+    <p class="sub">한 줄 한 줄이 동작하는 모습으로 정리</p>
+    <div class="codebox"><span class="kw">class</span> <span class="ty">Breakfast</span> {
+  <span class="fn">init</span>(meat, bread) {     <span class="cm">// 생성자</span>
+    <span class="kw">this</span>.meat  = meat;       <span class="cm">// 필드 설정</span>
+    <span class="kw">this</span>.bread = bread;
+  }
+
+  <span class="fn">serve</span>(who) {            <span class="cm">// 메서드</span>
+    print <span class="st">"Enjoy your "</span> + <span class="kw">this</span>.meat + <span class="st">", "</span> + who + <span class="st">"."</span>;
+  }
+}
+
+<span class="kw">var</span> bacon = <span class="ty">Breakfast</span>(<span class="st">"bacon"</span>, <span class="st">"toast"</span>);  <span class="cm">// 클래스 호출 → 인스턴스</span>
+bacon.serve(<span class="st">"you"</span>);                       <span class="cm">// Enjoy your bacon, you.</span></div>
+    <div class="grid2">
+      <div class="panel"><b class="acc">필요한 것</b><ul style="margin:6px 0 0"><li>클래스 <b>선언</b>과 실행</li><li>클래스 <b>호출</b> → 인스턴스</li><li>필드 <b>읽기/쓰기</b> (<code>.</code>)</li></ul></div>
+      <div class="panel"><b class="acc">그리고</b><ul style="margin:6px 0 0"><li>메서드 정의·호출</li><li><span class="pp">this</span> 바인딩</li><li>생성자 <code>init</code></li></ul></div>
+    </div>
+  </section>
+
+  <!-- 3. 파이프라인 -->
+  <section class="slide">
+    <h2>기능 하나가 인터프리터 전 단계를 가로지른다</h2>
+    <p class="sub">스캐너는 그대로, 나머지 세 단계에 손을 댄다</p>
+    <div class="pipe">
+      <div class="pnode"><b>SCANNER</b><span class="muted">변경 없음</span><br>class·this 토큰</div>
+      <span class="parr">→</span>
+      <div class="pnode on"><b>PARSER</b>Class 선언<br>Get / Set / This</div>
+      <span class="parr">→</span>
+      <div class="pnode on"><b>RESOLVER</b>this 스코프<br>정적 검사</div>
+      <span class="parr">→</span>
+      <div class="pnode on"><b>INTERPRETER</b>LoxClass<br>LoxInstance</div>
+    </div>
+    <div class="note"><b>새 AST 노드 4개</b> — <code>Stmt.Class</code>, <code>Expr.Get</code>, <code>Expr.Set</code>, <code>Expr.This</code> · 메서드는 기존 <code>Stmt.Function</code>을 그대로 재사용한다.</div>
+    <div class="good"><b>새 런타임 타입 2개</b> — <code>LoxClass</code>(클래스 자체), <code>LoxInstance</code>(인스턴스).</div>
+  </section>
+
+  <!-- 4. 문법 -->
+  <section class="slide">
+    <h2>추가되는 문법</h2>
+    <p class="sub">기존 문법에 얹히는 규칙들</p>
+    <div class="codebox"><span class="cm">// 선언</span>
+declaration → classDecl | funDecl | varDecl | statement ;
+classDecl   → <span class="st">"class"</span> IDENTIFIER <span class="st">"{"</span> function* <span class="st">"}"</span> ;
+
+<span class="cm">// 프로퍼티 접근 — 호출과 같은 우선순위 단계로 묶인다</span>
+call        → primary ( <span class="st">"("</span> arguments? <span class="st">")"</span> | <span class="st">"."</span> IDENTIFIER )* ;
+
+<span class="cm">// 대입 — 좌변이 프로퍼티일 수 있다</span>
+assignment  → ( call <span class="st">"."</span> )? IDENTIFIER <span class="st">"="</span> assignment | logic_or ;
+
+<span class="cm">// 기본식 — this</span>
+primary     → ... | <span class="st">"this"</span> | IDENTIFIER ;</div>
+    <p class="muted"><code>.</code>(프로퍼티)은 함수 호출 <code>()</code>과 <span class="acc">같은 단계</span>에서 왼쪽부터 체인으로 묶인다 — <code>egg.scramble(3).with(cheddar)</code>.</p>
+  </section>
+
+  <!-- 5. 클래스 선언 파싱 -->
+  <section class="slide">
+    <h2>① 클래스 선언 — 파싱</h2>
+    <div class="codebox"><span class="cm">// Parser.java — 모든 선언의 진입점</span>
+<span class="kw">private</span> Stmt <span class="fn">declaration</span>() {
+  <span class="kw">try</span> {
+    <span class="kw">if</span> (match(CLASS)) <span class="kw">return</span> classDeclaration();   <span class="cm">// ← 추가</span>
+    <span class="kw">if</span> (match(FUN))   <span class="kw">return</span> function(<span class="st">"function"</span>);
+    <span class="kw">if</span> (match(VAR))   <span class="kw">return</span> varDeclaration();
+    <span class="kw">return</span> statement();
+  } <span class="kw">catch</span> (ParseError e) { synchronize(); <span class="kw">return</span> <span class="kw">null</span>; }
+}
+
+<span class="kw">private</span> Stmt <span class="fn">classDeclaration</span>() {
+  Token name = consume(IDENTIFIER, <span class="st">"Expect class name."</span>);
+  consume(LEFT_BRACE, <span class="st">"Expect '{' before class body."</span>);
+
+  List&lt;Stmt.Function&gt; methods = <span class="kw">new</span> ArrayList&lt;&gt;();
+  <span class="kw">while</span> (!check(RIGHT_BRACE) &amp;&amp; !isAtEnd()) {
+    methods.add(function(<span class="st">"method"</span>));        <span class="cm">// 함수 파서를 그대로 재사용</span>
+  }
+  consume(RIGHT_BRACE, <span class="st">"Expect '}' after class body."</span>);
+  <span class="kw">return</span> <span class="kw">new</span> Stmt.Class(name, methods);
+}</div>
+    <p class="muted">메서드는 <span class="acc">fun 키워드 없는 함수</span>일 뿐 — <code>function()</code>을 재사용해 이름·파라미터·본문을 파싱한다.</p>
+  </section>
+
+  <!-- 6. 클래스 선언 실행 -->
+  <section class="slide">
+    <h2>① 클래스 선언 — 실행</h2>
+    <div class="codebox"><span class="cm">// Interpreter.java — class 선언문을 실행</span>
+<span class="kw">@Override</span>
+<span class="kw">public</span> Void <span class="fn">visitClassStmt</span>(Stmt.Class stmt) {
+  environment.define(stmt.name.lexeme, <span class="kw">null</span>);            <span class="cm">// ① 이름만 먼저 선언</span>
+
+  Map&lt;String, LoxFunction&gt; methods = <span class="kw">new</span> HashMap&lt;&gt;();
+  <span class="kw">for</span> (Stmt.Function method : stmt.methods) {
+    LoxFunction function = <span class="kw">new</span> LoxFunction(
+        method, environment,
+        method.name.lexeme.equals(<span class="st">"init"</span>));            <span class="cm">// init이면 생성자 표시</span>
+    methods.put(method.name.lexeme, function);
+  }
+
+  LoxClass clazz = <span class="kw">new</span> LoxClass(stmt.name.lexeme, methods);
+  environment.assign(stmt.name, clazz);                    <span class="cm">// ② 진짜 클래스로 채움</span>
+  <span class="kw">return</span> <span class="kw">null</span>;
+}</div>
+    <div class="note"><b>왜 define → assign 2단계인가?</b> 먼저 이름을 <code>null</code>로 선언해두면, 메서드 본문 안에서 <span class="acc">자기 클래스 이름을 참조</span>할 수 있다.</div>
+  </section>
+
+  <!-- 7. 인스턴스 생성 -->
+  <section class="slide">
+    <h2>② 인스턴스 생성 — 클래스를 호출한다</h2>
+    <p class="sub">클래스가 곧 <code>LoxCallable</code> — 호출하면 인스턴스를 만든다</p>
+    <div class="codebox"><span class="cm">// LoxClass.java</span>
+<span class="kw">class</span> LoxClass <span class="kw">implements</span> LoxCallable {
+  <span class="kw">final</span> String name;
+  <span class="kw">private final</span> Map&lt;String, LoxFunction&gt; methods;
+
+  <span class="kw">@Override</span>
+  <span class="kw">public</span> Object <span class="fn">call</span>(Interpreter interpreter, List&lt;Object&gt; arguments) {
+    LoxInstance instance = <span class="kw">new</span> LoxInstance(<span class="kw">this</span>);   <span class="cm">// 빈 인스턴스</span>
+    <span class="kw">return</span> instance;
+  }
+
+  LoxFunction <span class="fn">findMethod</span>(String name) {
+    <span class="kw">return</span> methods.get(name);                  <span class="cm">// 없으면 null</span>
+  }
+}</div>
+    <div class="good"><code>Breakfast("bacon","toast")</code> → 기존 <code>visitCallExpr</code>이 <code>LoxCallable.call()</code>을 부른다. <b>함수 호출과 완전히 같은 길.</b></div>
+  </section>
+
+  <!-- 8. LoxInstance -->
+  <section class="slide">
+    <h2>② 인스턴스의 정체</h2>
+    <p class="sub">인스턴스는 <span class="acc">클래스 참조 + 필드 맵</span> — 그게 전부다</p>
+    <div class="codebox"><span class="cm">// LoxInstance.java</span>
+<span class="kw">class</span> LoxInstance {
+  <span class="kw">private</span> LoxClass clazz;
+  <span class="kw">private final</span> Map&lt;String, Object&gt; fields = <span class="kw">new</span> HashMap&lt;&gt;();
+
+  <span class="fn">LoxInstance</span>(LoxClass clazz) { <span class="kw">this</span>.clazz = clazz; }
+
+  <span class="kw">@Override</span>
+  <span class="kw">public</span> String <span class="fn">toString</span>() { <span class="kw">return</span> clazz.name + <span class="st">" instance"</span>; }
+}</div>
+    <div class="grid2">
+      <div class="panel"><b class="pr">필드(field)</b><p class="muted" style="margin:6px 0 0">인스턴스마다 가지는 <b>상태</b>. 자유롭게 추가 가능 — 선언 불필요.</p></div>
+      <div class="panel"><b class="pr">메서드(method)</b><p class="muted" style="margin:6px 0 0"><b>클래스</b>가 소유하고 모든 인스턴스가 공유. 필드 맵엔 없다.</p></div>
+    </div>
+  </section>
+
+  <!-- 9. 프로퍼티 파싱 -->
+  <section class="slide">
+    <h2>③ 프로퍼티 접근 — 파싱</h2>
+    <div class="grid2">
+      <div>
+        <h3>읽기: <code>a.b</code> → Get</h3>
+        <div class="codebox" style="font-size:13px"><span class="cm">// Parser.call()</span>
+<span class="kw">while</span> (<span class="kw">true</span>) {
+  <span class="kw">if</span> (match(LEFT_PAREN)) {       <span class="cm">// 호출</span>
+    expr = finishCall(expr);
+  } <span class="kw">else if</span> (match(DOT)) {     <span class="cm">// ← 추가</span>
+    Token name = consume(IDENTIFIER,
+      <span class="st">"Expect property name after '.'."</span>);
+    expr = <span class="kw">new</span> Expr.Get(expr, name);
+  } <span class="kw">else</span> <span class="kw">break</span>;
+}</div>
+      </div>
+      <div>
+        <h3>쓰기: <code>a.b = c</code> → Set</h3>
+        <div class="codebox" style="font-size:13px"><span class="cm">// Parser.assignment()</span>
+Expr expr = or();         <span class="cm">// 좌변: a.b → Get</span>
+<span class="kw">if</span> (match(EQUAL)) {
+  Expr value = assignment();
+  <span class="kw">if</span> (expr <span class="kw">instanceof</span> Expr.Variable) {
+    ...                   <span class="cm">// 변수 대입</span>
+  } <span class="kw">else if</span> (expr <span class="kw">instanceof</span> Expr.Get) {
+    Expr.Get get = (Expr.Get) expr;
+    <span class="kw">return</span> <span class="kw">new</span> Expr.Set(
+      get.object, get.name, value);
+  }
+  error(equals, <span class="st">"Invalid assignment target."</span>);
+}</div>
+      </div>
+    </div>
+    <div class="note">파서는 <code>=</code>를 만나기 전엔 Get/Set을 모른다 → <span class="acc">일단 Get으로 파싱한 뒤, <code>=</code>를 보면 Set으로 재해석</span>. 변수 대입과 똑같은 전략.</div>
+  </section>
+
+  <!-- 10. Get/Set 실행 -->
+  <section class="slide">
+    <h2>③ 프로퍼티 접근 — 실행</h2>
+    <div class="grid2">
+      <div>
+        <h3>get — 필드 먼저, 그다음 메서드</h3>
+        <div class="codebox" style="font-size:12.5px"><span class="cm">// LoxInstance.get()</span>
+Object <span class="fn">get</span>(Token name) {
+  <span class="kw">if</span> (fields.containsKey(name.lexeme))   <span class="cm">// ①필드</span>
+    <span class="kw">return</span> fields.get(name.lexeme);
+
+  LoxFunction method =                  <span class="cm">// ②메서드</span>
+    clazz.findMethod(name.lexeme);
+  <span class="kw">if</span> (method != <span class="kw">null</span>)
+    <span class="kw">return</span> method.bind(<span class="kw">this</span>);          <span class="cm">// this 바인딩!</span>
+
+  <span class="kw">throw</span> <span class="kw">new</span> RuntimeError(name,
+    <span class="st">"Undefined property '"</span> + name.lexeme + <span class="st">"'."</span>);
+}</div>
+      </div>
+      <div>
+        <h3>set — 필드에 그냥 넣는다</h3>
+        <div class="codebox" style="font-size:12.5px"><span class="cm">// Interpreter.visitSetExpr()</span>
+Object object = evaluate(expr.object);
+<span class="kw">if</span> (!(object <span class="kw">instanceof</span> LoxInstance))
+  <span class="kw">throw</span> <span class="kw">new</span> RuntimeError(expr.name,
+    <span class="st">"Only instances have fields."</span>);
+
+Object value = evaluate(expr.value);
+((LoxInstance) object)
+   .set(expr.name, value);
+<span class="kw">return</span> value;</div>
+        <p class="muted" style="font-size:14px">필드는 <b>새로 추가</b> 자유 — 선언 없이 즉석 생성.</p>
+      </div>
+    </div>
+    <div class="warn"><b>우선순위:</b> 필드가 메서드보다 먼저. 같은 이름이면 필드가 메서드를 <span class="dg">가린다(shadowing)</span>.</div>
+  </section>
+
+  <!-- 11. this 와 bind -->
+  <section class="slide">
+    <h2>④ this — 메서드가 인스턴스를 기억하는 법</h2>
+    <p class="sub"><code>get</code>에서 본 <code>method.bind(this)</code>가 핵심</p>
+    <div class="grid2">
+      <div>
+        <div class="codebox" style="font-size:13px"><span class="cm">// LoxFunction.bind()</span>
+LoxFunction <span class="fn">bind</span>(LoxInstance instance) {
+  Environment env =
+      <span class="kw">new</span> Environment(closure);
+  env.define(<span class="st">"this"</span>, instance);   <span class="cm">// 숨은 변수</span>
+  <span class="kw">return</span> <span class="kw">new</span> LoxFunction(
+      declaration, env, isInitializer);
+}</div>
+        <p class="muted" style="font-size:14px"><code>this</code>는 <b>메서드를 인스턴스에 묶을 때</b> 생기는 숨은 지역변수다.</p>
+      </div>
+      <div>
+        <p style="margin:0 0 6px" class="muted">메서드 본문이 보는 환경 체인:</p>
+        <div class="chain">
+          <div class="env"><b>this 환경</b> &nbsp; <code>this → instance</code></div>
+          <div class="envarr">↓ enclosing</div>
+          <div class="env">클래스 정의 환경 <span class="muted">(closure)</span></div>
+          <div class="envarr">↓ enclosing</div>
+          <div class="env">전역 환경</div>
+        </div>
+      </div>
+    </div>
+    <div class="good">한 번 bind된 메서드는 <span class="acc">자기 인스턴스를 평생 기억</span>한다 — 변수에 담아 따로 호출해도 <code>this</code>가 유지된다.</div>
+  </section>
+
+  <!-- 12. Resolver -->
+  <section class="slide">
+    <h2>④ this — Resolver가 스코프를 씌운다</h2>
+    <p class="sub">메서드를 풀기 전에 <code>this</code> 한 칸짜리 스코프를 끼워 넣는다</p>
+    <div class="codebox"><span class="cm">// Resolver.visitClassStmt()</span>
+<span class="kw">public</span> Void <span class="fn">visitClassStmt</span>(Stmt.Class stmt) {
+  ClassType enclosing = currentClass;
+  currentClass = ClassType.CLASS;             <span class="cm">// 지금 클래스 안이다</span>
+
+  declare(stmt.name); define(stmt.name);
+
+  beginScope();
+  scopes.peek().put(<span class="st">"this"</span>, <span class="kw">true</span>);          <span class="cm">// ← this 스코프 한 칸</span>
+
+  <span class="kw">for</span> (Stmt.Function method : stmt.methods) {
+    FunctionType decl = method.name.lexeme.equals(<span class="st">"init"</span>)
+        ? FunctionType.INITIALIZER : FunctionType.METHOD;
+    resolveFunction(method, decl);
+  }
+
+  endScope();
+  currentClass = enclosing;
+  <span class="kw">return</span> <span class="kw">null</span>;
+}</div>
+    <p class="muted">덕분에 <code>visitThisExpr</code>은 <code>this</code>를 <span class="acc">평범한 지역변수처럼</span> resolve해, 정확한 거리(distance)를 기록한다.</p>
+  </section>
+
+  <!-- 13. init 생성자 -->
+  <section class="slide">
+    <h2>⑤ 생성자 init</h2>
+    <p class="sub">클래스를 호출하면 자동으로 불리는 특별한 메서드</p>
+    <div class="grid2">
+      <div>
+        <div class="codebox" style="font-size:12.5px"><span class="cm">// LoxClass.call() — init 자동 호출</span>
+LoxInstance instance =
+    <span class="kw">new</span> LoxInstance(<span class="kw">this</span>);
+LoxFunction init = findMethod(<span class="st">"init"</span>);
+<span class="kw">if</span> (init != <span class="kw">null</span>)
+  init.bind(instance)
+      .call(interpreter, arguments);
+<span class="kw">return</span> instance;</div>
+        <p class="muted" style="font-size:13.5px">호출의 <b>arity</b>도 init의 파라미터 수를 따른다.</p>
+      </div>
+      <div>
+        <div class="codebox" style="font-size:12.5px"><span class="cm">// LoxFunction.call() — init은 늘 this 반환</span>
+<span class="kw">try</span> {
+  interpreter.executeBlock(
+      declaration.body, env);
+} <span class="kw">catch</span> (Return r) {
+  <span class="kw">if</span> (isInitializer)
+    <span class="kw">return</span> closure.getAt(0, <span class="st">"this"</span>);
+  <span class="kw">return</span> r.value;
+}
+<span class="kw">if</span> (isInitializer)
+  <span class="kw">return</span> closure.getAt(0, <span class="st">"this"</span>);
+<span class="kw">return</span> <span class="kw">null</span>;</div>
+      </div>
+    </div>
+    <div class="warn"><b>정적 규칙(Resolver):</b> <code>init</code> 안에서 <span class="dg">값을 가진 return</span>은 금지 — <code>"Can't return a value from an initializer."</code> (인자 없는 <code>return;</code>으로 일찍 끝내는 건 허용)</div>
+  </section>
+
+  <!-- 14. 정적 검사 정리 -->
+  <section class="slide">
+    <h2>Resolver가 런타임 전에 잡아주는 것</h2>
+    <div class="grid2">
+      <div class="panel">
+        <h3 style="margin-top:0">this — 클래스 밖 금지</h3>
+        <div class="codebox" style="font-size:12.5px"><span class="cm">// visitThisExpr</span>
+<span class="kw">if</span> (currentClass == ClassType.NONE) {
+  Lox.error(expr.keyword,
+    <span class="st">"Can't use 'this'</span>
+<span class="st">     outside of a class."</span>);
+  <span class="kw">return</span> <span class="kw">null</span>;
+}
+resolveLocal(expr, expr.keyword);</div>
+      </div>
+      <div class="panel">
+        <h3 style="margin-top:0">init — 값 반환 금지</h3>
+        <div class="codebox" style="font-size:12.5px"><span class="cm">// visitReturnStmt</span>
+<span class="kw">if</span> (stmt.value != <span class="kw">null</span>) {
+  <span class="kw">if</span> (currentFunction
+        == FunctionType.INITIALIZER)
+    Lox.error(stmt.keyword,
+      <span class="st">"Can't return a value</span>
+<span class="st">       from an initializer."</span>);
+  resolve(stmt.value);
+}</div>
+      </div>
+    </div>
+    <div class="note"><b>역할 분리</b> — Resolver = 컴파일 타임 규칙(정적 오류), Interpreter = 런타임 동작. 깔끔하게 나뉜다.</div>
+  </section>
+
+  <!-- 15. 정리 -->
+  <section class="slide">
+    <h2>정리</h2>
+    <div class="grid2">
+      <div class="panel">
+        <h3 style="margin-top:0">추가된 것</h3>
+        <p style="margin:6px 0 2px"><b class="pr">새 AST</b></p>
+        <span class="tag">Stmt.Class</span><span class="tag">Expr.Get</span><span class="tag">Expr.Set</span><span class="tag">Expr.This</span>
+        <p style="margin:14px 0 2px"><b class="pr">새 런타임 타입</b></p>
+        <ul style="margin:4px 0 0">
+          <li><code>LoxClass</code> — Callable + 메서드 보관 + 인스턴스 팩토리</li>
+          <li><code>LoxInstance</code> — 클래스 참조 + 필드 맵</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3 style="margin-top:0">핵심 통찰</h3>
+        <ul style="margin:6px 0 0">
+          <li>클래스 호출 = 인스턴스 생성 (<b>Callable 재사용</b>)</li>
+          <li>메서드 = fun 없는 함수 (<b>파서 재사용</b>)</li>
+          <li>Get으로 파싱 → <code>=</code> 보면 <b>Set으로 재해석</b></li>
+          <li><b>필드 &gt; 메서드</b> 우선순위(shadowing)</li>
+          <li><span class="pp">this</span> = <code>bind</code>가 만드는 환경 변수</li>
+          <li><code>init</code> = 항상 <code>this</code>를 돌려주는 메서드</li>
+        </ul>
+      </div>
+    </div>
+    <p class="muted" style="font-size:15px; margin-top:18px">다음 장 <b>ch13 — Inheritance</b>: superclass, <code>super</code> 호출, 메서드 오버라이드</p>
+  </section>
+
+</div>
+
+<div class="hint">← → 이동 · F 전체화면</div>
+<div class="pageno" id="pageno">1 / 15</div>
+<div class="nav">
+  <button onclick="go(-1)">‹ 이전</button>
+  <button onclick="go(1)">다음 ›</button>
+</div>
+<div class="bar"><i id="bar"></i></div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let i=0;
+function render(){
+  slides.forEach((s,n)=>s.classList.toggle('active',n===i));
+  document.getElementById('pageno').textContent=(i+1)+' / '+slides.length;
+  document.getElementById('bar').style.width=((i+1)/slides.length*100)+'%';
+}
+function go(d){ i=Math.min(slides.length-1,Math.max(0,i+d)); render(); }
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){go(1); e.preventDefault();}
+  else if(e.key==='ArrowLeft'){go(-1);}
+  else if(e.key==='Home'){i=0;render();}
+  else if(e.key==='End'){i=slides.length-1;render();}
+  else if(e.key.toLowerCase()==='f'){
+    if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+});
+render();
+</script>
+</body>
+</html>

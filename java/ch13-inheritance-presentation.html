@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ch13 — Inheritance</title>
+<style>
+:root{
+  --bg:#0e1016; --panel:#191c26; --panel2:#212533; --border:#2a2f3e;
+  --primary:#5aa2ff; --accent:#ffb454; --ok:#3ddc97; --danger:#ff6b6b;
+  --purple:#b48cff; --text:#e6e9f0; --muted:#8b93a7;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:
+    radial-gradient(1200px 700px at 80% -10%, rgba(90,162,255,.10), transparent 60%),
+    radial-gradient(1000px 600px at -10% 110%, rgba(180,140,255,.10), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:-apple-system,"Segoe UI","Apple SD Gothic Neo",sans-serif;
+  line-height:1.6; overflow:hidden;
+}
+code,.mono{font-family:"SF Mono",Menlo,monospace;}
+
+.deck{height:100vh; display:flex; align-items:center; justify-content:center; padding:46px;}
+.slide{
+  display:none; width:100%; max-width:1000px; max-height:100%; overflow:auto;
+  animation:fade .35s ease;
+}
+.slide.active{display:block;}
+@keyframes fade{from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:none;}}
+
+h1{font-size:40px; margin:0 0 12px; line-height:1.2;}
+h2{font-size:27px; margin:0 0 18px; border-left:4px solid var(--primary); padding-left:14px;}
+h3{font-size:18px; margin:20px 0 8px; color:var(--accent);}
+p,li{font-size:16px;}
+.sub{color:var(--muted); font-size:17px; margin:0 0 26px;}
+.lead{font-size:19px; color:var(--text);}
+ul{margin:8px 0; padding-left:22px;} li{margin:7px 0;}
+.muted{color:var(--muted);} .ok{color:var(--ok);} .acc{color:var(--accent);} .pp{color:var(--purple);} .dg{color:var(--danger);} .pr{color:var(--primary);}
+
+.codebox{background:#0a0c12; border:1px solid var(--border); border-radius:12px; padding:16px 18px; font-family:"SF Mono",Menlo,monospace; font-size:14px; overflow:auto; white-space:pre; margin:14px 0;}
+.kw{color:#ff7b9c;} .ty{color:#6fdcff;} .st{color:#9be29b;} .cm{color:#6b7280;} .fn{color:#ffd28a;} .nm{color:#ffb454;}
+
+.panel{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:18px 20px; margin:12px 0;}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+@media(max-width:860px){.grid2{grid-template-columns:1fr;}}
+.tag{display:inline-block; background:var(--panel2); border:1px solid var(--border); border-radius:999px; padding:4px 13px; font-size:13px; color:var(--accent); margin:0 6px 6px 0;}
+.note{border-left:3px solid var(--accent); background:rgba(255,180,84,.08); padding:11px 15px; border-radius:0 8px 8px 0; margin:14px 0; font-size:15px;}
+.warn{border-left:3px solid var(--danger); background:rgba(255,107,107,.08); padding:11px 15px; border-radius:0 8px 8px 0; margin:14px 0; font-size:15px;}
+.good{border-left:3px solid var(--ok); background:rgba(61,220,151,.08); padding:11px 15px; border-radius:0 8px 8px 0; margin:14px 0; font-size:15px;}
+
+.pipe{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center; margin:26px 0;}
+.pnode{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:11px 15px; font-size:14px; text-align:center; min-width:120px;}
+.pnode b{display:block; color:var(--accent); font-size:13px; margin-bottom:2px;}
+.pnode.on{border-color:var(--primary); box-shadow:0 0 0 1px var(--primary) inset;}
+.parr{color:var(--muted); font-size:20px;}
+
+.chain{display:flex; flex-direction:column; gap:8px; margin:14px 0;}
+.env{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:10px 14px; font-size:14px;}
+.env b{color:var(--purple);}
+.envarr{text-align:center; color:var(--muted); font-size:13px;}
+
+.kbd{display:inline-block; background:var(--panel2); border:1px solid var(--border); border-bottom-width:2px; border-radius:6px; padding:1px 8px; font-size:13px; font-family:"SF Mono",Menlo,monospace;}
+
+.title-wrap{text-align:center;}
+.title-wrap .badge{display:inline-block; background:rgba(90,162,255,.14); border:1px solid var(--primary); color:var(--primary); border-radius:999px; padding:6px 18px; font-size:15px; margin-bottom:22px; letter-spacing:.5px;}
+.title-wrap .meta{color:var(--muted); margin-top:26px; font-size:15px;}
+
+.bar{position:fixed; bottom:0; left:0; right:0; height:5px; background:var(--panel2);}
+.bar i{display:block; height:100%; background:linear-gradient(90deg,var(--primary),var(--purple)); transition:width .3s;}
+.pageno{position:fixed; bottom:16px; right:20px; color:var(--muted); font-size:13px; font-family:"SF Mono",Menlo,monospace;}
+.nav{position:fixed; bottom:14px; left:20px; display:flex; gap:8px;}
+.nav button{background:var(--panel2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:7px 14px; font-size:14px; cursor:pointer;}
+.nav button:hover{border-color:var(--primary);}
+.hint{position:fixed; top:14px; right:18px; color:var(--muted); font-size:12px;}
+
+/* PDF 출력: 모든 슬라이드를 한 장씩 펼쳐 16:9 페이지로 */
+@media print{
+  @page{ size:1280px 720px; margin:0; }
+  html,body{ overflow:visible !important; height:auto !important;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .deck{ display:block; height:auto; padding:0; }
+  .slide{ display:block !important; animation:none;
+    width:1280px; max-width:none; height:720px; max-height:none;
+    overflow:hidden; padding:56px 70px;
+    page-break-after:always; break-after:page; }
+  .slide:last-child{ page-break-after:auto; break-after:auto; }
+  .nav,.pageno,.bar,.hint{ display:none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="deck">
+
+  <!-- 1. 타이틀 -->
+  <section class="slide active">
+    <div class="title-wrap">
+      <span class="badge">Crafting Interpreters · Chapter 13</span>
+      <h1>Inheritance</h1>
+      <p class="lead muted">클래스가 다른 클래스를 물려받다 — superclass <code>&lt;</code>, 메서드 상속, <span class="pp">super</span> 호출</p>
+      <p class="meta">jlox · Java tree-walking interpreter</p>
+    </div>
+  </section>
+
+  <!-- 2. 무엇을 만드나 -->
+  <section class="slide">
+    <h2>이 장에서 만드는 것</h2>
+    <p class="sub">상속의 세 가지: <b>물려받기</b> · <b>오버라이드</b> · <b>super 호출</b></p>
+    <div class="codebox"><span class="kw">class</span> <span class="ty">Doughnut</span> {
+  <span class="fn">cook</span>() { print <span class="st">"Fry until golden brown."</span>; }
+}
+
+<span class="kw">class</span> <span class="ty">BostonCream</span> &lt; <span class="ty">Doughnut</span> {     <span class="cm">// '&lt;' 로 상속</span>
+  <span class="fn">cook</span>() {
+    <span class="kw">super</span>.cook();                       <span class="cm">// 부모 메서드 호출</span>
+    print <span class="st">"Pipe full of custard and coat with chocolate."</span>;
+  }
+}
+
+<span class="ty">BostonCream</span>().cook();
+<span class="cm">// Fry until golden brown.</span>
+<span class="cm">// Pipe full of custard and coat with chocolate.</span></div>
+    <div class="grid2">
+      <div class="panel"><b class="acc">필요한 것</b><ul style="margin:6px 0 0"><li>superclass <b>선언</b> (<code>&lt;</code>)</li><li>메서드 <b>상속</b> (찾기 위임)</li></ul></div>
+      <div class="panel"><b class="acc">그리고</b><ul style="margin:6px 0 0"><li><span class="pp">super</span> 표현식</li><li>오버라이드한 부모 메서드 호출</li></ul></div>
+    </div>
+  </section>
+
+  <!-- 3. 파이프라인 -->
+  <section class="slide">
+    <h2>또다시 전 단계를 가로지른다</h2>
+    <p class="sub">12장 클래스 위에 얇게 한 겹 — 새 런타임 타입은 없다</p>
+    <div class="pipe">
+      <div class="pnode"><b>SCANNER</b><span class="muted">변경 없음</span><br>&lt;·super 토큰</div>
+      <span class="parr">→</span>
+      <div class="pnode on"><b>PARSER</b>superclass 절<br>Super 표현식</div>
+      <span class="parr">→</span>
+      <div class="pnode on"><b>RESOLVER</b>super 스코프<br>정적 검사</div>
+      <span class="parr">→</span>
+      <div class="pnode on"><b>INTERPRETER</b>findMethod 위임<br>super 바인딩</div>
+    </div>
+    <div class="note"><b>새 AST 노드 1개</b> — <code>Expr.Super</code> · <code>Stmt.Class</code>엔 <code>superclass</code> 필드(<code>Expr.Variable</code>)가 추가된다.</div>
+    <div class="good"><b>새 런타임 타입 0개</b> — <code>LoxClass</code>에 <code>superclass</code> 필드 하나만 더한다. 인스턴스/필드 구조는 그대로.</div>
+  </section>
+
+  <!-- 4. 문법 -->
+  <section class="slide">
+    <h2>추가되는 문법</h2>
+    <p class="sub">classDecl에 선택적 superclass 절, primary에 super</p>
+    <div class="codebox"><span class="cm">// 선언 — 클래스 이름 뒤에 선택적 "&lt; 부모이름"</span>
+classDecl → <span class="st">"class"</span> IDENTIFIER ( <span class="st">"&lt;"</span> IDENTIFIER )?
+            <span class="st">"{"</span> function* <span class="st">"}"</span> ;
+
+<span class="cm">// 기본식 — super.method 형태로만 등장 (단독 super 불가)</span>
+primary   → ... | <span class="st">"super"</span> <span class="st">"."</span> IDENTIFIER ;</div>
+    <div class="grid2">
+      <div class="panel"><b class="pr">왜 <code>&lt;</code> 인가?</b><p class="muted" style="margin:6px 0 0">상속 키워드(<code>extends</code> 등) 없이 기호 하나로. 스캐너는 이미 <code>&lt;</code>를 알고 있어 <b>토큰 추가 0개</b>.</p></div>
+      <div class="panel"><b class="pr">왜 <code>super</code> 단독 금지?</b><p class="muted" style="margin:6px 0 0"><code>super</code> 자체는 객체가 아니다 — 항상 <code>super.method</code>로 <b>부모의 메서드를 지목</b>할 때만 의미가 있다.</p></div>
+    </div>
+  </section>
+
+  <!-- 5. superclass 파싱 -->
+  <section class="slide">
+    <h2>① superclass — 파싱</h2>
+    <div class="codebox"><span class="cm">// Parser.classDeclaration()</span>
+<span class="kw">private</span> Stmt <span class="fn">classDeclaration</span>() {
+  Token name = consume(IDENTIFIER, <span class="st">"Expect class name."</span>);
+
+  Expr.Variable superclass = <span class="kw">null</span>;
+  <span class="kw">if</span> (match(LESS)) {                              <span class="cm">// '&lt;' 가 있으면</span>
+    consume(IDENTIFIER, <span class="st">"Expect superclass name."</span>);
+    superclass = <span class="kw">new</span> Expr.Variable(previous());     <span class="cm">// 변수 참조로</span>
+  }
+
+  consume(LEFT_BRACE, <span class="st">"Expect '{' before class body."</span>);
+  ... <span class="cm">// 메서드 파싱은 12장 그대로</span>
+  <span class="kw">return</span> <span class="kw">new</span> Stmt.Class(name, superclass, methods);   <span class="cm">// 필드 1개 추가</span>
+}</div>
+    <div class="note">부모 이름을 <span class="acc"><code>Expr.Variable</code>로 감싸는 이유</span> — superclass는 런타임에 <b>변수처럼 평가</b>해서 실제 <code>LoxClass</code> 객체를 얻어야 하기 때문. resolve·평가를 변수 메커니즘에 그대로 얹는다.</div>
+  </section>
+
+  <!-- 6. superclass 실행 -->
+  <section class="slide">
+    <h2>① superclass — 실행</h2>
+    <div class="codebox"><span class="cm">// Interpreter.visitClassStmt()  (앞부분)</span>
+Object superclass = <span class="kw">null</span>;
+<span class="kw">if</span> (stmt.superclass != <span class="kw">null</span>) {
+  superclass = evaluate(stmt.superclass);            <span class="cm">// 변수 평가</span>
+  <span class="kw">if</span> (!(superclass <span class="kw">instanceof</span> LoxClass)) {           <span class="cm">// 런타임 검사</span>
+    <span class="kw">throw</span> <span class="kw">new</span> RuntimeError(stmt.superclass.name,
+        <span class="st">"Superclass must be a class."</span>);
+  }
+}
+
+environment.define(stmt.name.lexeme, <span class="kw">null</span>);
+...
+LoxClass klass = <span class="kw">new</span> LoxClass(stmt.name.lexeme,
+    (LoxClass)superclass, methods);                  <span class="cm">// 부모를 품고 생성</span></div>
+    <div class="warn"><b>왜 런타임 검사?</b> <code>class Eclair &lt; epicScone {}</code> 처럼 부모 자리에 <span class="dg">클래스가 아닌 값</span>이 올 수 있다. 이건 정적으로 알 수 없어 <b>런타임 에러</b>로 잡는다.</div>
+  </section>
+
+  <!-- 7. 메서드 상속 -->
+  <section class="slide">
+    <h2>② 메서드 상속 — findMethod 위임</h2>
+    <p class="sub">상속의 본질은 의외로 단순하다 — <span class="acc">없으면 부모에게 물어본다</span></p>
+    <div class="codebox"><span class="cm">// LoxClass.java</span>
+<span class="kw">class</span> LoxClass <span class="kw">implements</span> LoxCallable {
+  <span class="kw">final</span> String name;
+  <span class="kw">final</span> LoxClass superclass;                 <span class="cm">// ← 추가된 필드</span>
+  <span class="kw">private final</span> Map&lt;String, LoxFunction&gt; methods;
+
+  LoxFunction <span class="fn">findMethod</span>(String name) {
+    <span class="kw">if</span> (methods.containsKey(name)) {         <span class="cm">// ① 내 메서드 먼저</span>
+      <span class="kw">return</span> methods.get(name);
+    }
+    <span class="kw">if</span> (superclass != <span class="kw">null</span>) {                 <span class="cm">// ② 없으면 부모에게</span>
+      <span class="kw">return</span> superclass.findMethod(name);     <span class="cm">//    재귀적으로 거슬러 올라감</span>
+    }
+    <span class="kw">return</span> <span class="kw">null</span>;                              <span class="cm">// ③ 끝까지 없으면 null</span>
+  }
+}</div>
+    <div class="good">12장의 <code>get</code>·<code>init</code> 호출이 모두 이미 <code>findMethod</code>를 거친다 → 이 한 군데만 고치면 <b>오버라이드도 공짜</b>. 자식에 있으면 자식 것이 먼저 잡힌다.</div>
+  </section>
+
+  <!-- 8. super 의 문제 -->
+  <section class="slide">
+    <h2>③ super — 왜 어려운가</h2>
+    <p class="sub"><code>super.cook()</code>은 "<b>나를 정의한 클래스의 부모</b>"에서 찾아야 한다</p>
+    <div class="grid2">
+      <div>
+        <div class="codebox" style="font-size:13px"><span class="kw">class</span> <span class="ty">A</span>            { <span class="fn">method</span>(){ <span class="st">"A"</span>; } }
+<span class="kw">class</span> <span class="ty">B</span> &lt; <span class="ty">A</span>        {
+  <span class="fn">method</span>(){ <span class="st">"B"</span>; }
+  <span class="fn">test</span>(){ <span class="kw">super</span>.method(); }   <span class="cm">// → "A"</span>
+}
+<span class="kw">class</span> <span class="ty">C</span> &lt; <span class="ty">B</span>        { }
+
+<span class="ty">C</span>().test();   <span class="cm">// 무엇이 출력될까?</span></div>
+      </div>
+      <div>
+        <div class="warn" style="margin-top:0"><b>함정:</b> <code>this</code>는 <code>C</code> 인스턴스다. 만약 super를 "<code>this</code>의 부모"로 풀면 <code>C</code>의 부모 <code>B</code> → <code>B.method</code> → <span class="dg">"B"</span> (오답!)</div>
+        <div class="good"><b>정답은 "A"</b> — <code>super</code>는 <span class="acc"><code>test</code>가 <u>선언된 클래스</u>(B)의 부모(A)</span>에서 찾아야 한다. 인스턴스의 타입이 아니라 <b>메서드가 쓰인 위치</b>가 기준.</div>
+      </div>
+    </div>
+    <p class="muted">즉 <code>super</code>는 정적으로(렉시컬하게) 결정된다 — 그래서 <b>this 환경 바로 바깥</b>에 super 환경을 끼워 넣는다.</p>
+  </section>
+
+  <!-- 9. super 환경 구성 -->
+  <section class="slide">
+    <h2>③ super — 환경 한 겹을 끼운다</h2>
+    <div class="grid2">
+      <div>
+        <div class="codebox" style="font-size:12.5px"><span class="cm">// Interpreter.visitClassStmt()</span>
+environment.define(stmt.name.lexeme, <span class="kw">null</span>);
+
+<span class="kw">if</span> (stmt.superclass != <span class="kw">null</span>) {
+  environment = <span class="kw">new</span> Environment(environment);
+  environment.define(<span class="st">"super"</span>, superclass); <span class="cm">// super 한 칸</span>
+}
+
+... <span class="cm">// 이 환경에서 메서드들을 LoxFunction으로 생성</span>
+    <span class="cm">// → 각 메서드의 closure가 super를 본다</span>
+
+<span class="kw">if</span> (superclass != <span class="kw">null</span>) {
+  environment = environment.enclosing;   <span class="cm">// 원복</span>
+}</div>
+      </div>
+      <div>
+        <p style="margin:0 0 6px" class="muted">메서드 본문이 보는 환경 체인:</p>
+        <div class="chain">
+          <div class="env"><b>this 환경</b> &nbsp; <code>this → instance</code></div>
+          <div class="envarr">↓ enclosing</div>
+          <div class="env"><b>super 환경</b> &nbsp; <code>super → 부모 클래스</code></div>
+          <div class="envarr">↓ enclosing</div>
+          <div class="env">클래스 정의 환경</div>
+        </div>
+        <p class="muted" style="font-size:14px"><code>super</code> 환경은 <b>클래스 선언 시점에</b> 닫힌다 → 메서드가 선언된 위치의 부모가 영구히 박제됨.</p>
+      </div>
+    </div>
+    <div class="note">메서드를 만들기 직전 super 환경을 끼우고, 만든 직후 원복 → 모든 메서드의 <b>closure가 같은 super 환경</b>을 공유한다.</div>
+  </section>
+
+  <!-- 10. super 파싱 & 평가 -->
+  <section class="slide">
+    <h2>③ super — 파싱과 평가</h2>
+    <div class="grid2">
+      <div>
+        <h3>파싱: super.method</h3>
+        <div class="codebox" style="font-size:12.5px"><span class="cm">// Parser.primary()</span>
+<span class="kw">if</span> (match(SUPER)) {
+  Token keyword = previous();
+  consume(DOT,
+    <span class="st">"Expect '.' after 'super'."</span>);
+  Token method = consume(IDENTIFIER,
+    <span class="st">"Expect superclass method name."</span>);
+  <span class="kw">return</span> <span class="kw">new</span> Expr.Super(keyword, method);
+}</div>
+      </div>
+      <div>
+        <h3>평가: 두 칸을 꺼낸다</h3>
+        <div class="codebox" style="font-size:12.5px"><span class="cm">// Interpreter.visitSuperExpr()</span>
+<span class="kw">int</span> distance = locals.get(expr);
+LoxClass superclass = (LoxClass)
+  environment.getAt(distance, <span class="st">"super"</span>);
+LoxInstance object = (LoxInstance)
+  environment.getAt(distance - <span class="nm">1</span>, <span class="st">"this"</span>);
+
+LoxFunction method =
+  superclass.findMethod(expr.method.lexeme);
+<span class="kw">if</span> (method == <span class="kw">null</span>)
+  <span class="kw">throw</span> <span class="kw">new</span> RuntimeError(expr.method,
+    <span class="st">"Undefined property '"</span> + ... );
+<span class="kw">return</span> method.bind(object);   <span class="cm">// this는 원래 인스턴스로</span></div>
+      </div>
+    </div>
+    <div class="good"><b>distance / distance-1 트릭:</b> super 환경 바로 안에 this 환경이 있으니, super를 찾은 거리에서 <span class="acc">한 칸 안</span>이 곧 this다. 부모 메서드를 찾되 <code>this</code>는 <b>실제 인스턴스</b>로 묶는다.</div>
+  </section>
+
+  <!-- 11. Resolver -->
+  <section class="slide">
+    <h2>③ super — Resolver가 스코프를 씌운다</h2>
+    <div class="codebox"><span class="cm">// Resolver.visitClassStmt()</span>
+<span class="kw">if</span> (stmt.superclass != <span class="kw">null</span> &amp;&amp;
+    stmt.name.lexeme.equals(stmt.superclass.name.lexeme)) {
+  Lox.error(stmt.superclass.name, <span class="st">"A class can't inherit from itself."</span>);  <span class="cm">// 정적 검사</span>
+}
+
+<span class="kw">if</span> (stmt.superclass != <span class="kw">null</span>) {
+  currentClass = ClassType.SUBCLASS;        <span class="cm">// "지금 자식 클래스 안"</span>
+  resolve(stmt.superclass);                 <span class="cm">// 부모 이름을 변수로 resolve</span>
+  beginScope();
+  scopes.peek().put(<span class="st">"super"</span>, <span class="kw">true</span>);        <span class="cm">// ← super 스코프 한 칸</span>
+}
+
+beginScope(); scopes.peek().put(<span class="st">"this"</span>, <span class="kw">true</span>);   <span class="cm">// 그 안에 this 스코프</span>
+... <span class="cm">// resolveFunction(method, ...)</span>
+endScope();                                 <span class="cm">// this 닫기</span>
+<span class="kw">if</span> (stmt.superclass != <span class="kw">null</span>) endScope();    <span class="cm">// super 닫기</span></div>
+    <p class="muted">스코프를 <span class="acc">super → this</span> 순서로 쌓아, 인터프리터의 환경 체인과 <b>거리(distance)가 정확히 일치</b>하게 만든다.</p>
+  </section>
+
+  <!-- 12. 정적 검사 -->
+  <section class="slide">
+    <h2>Resolver가 런타임 전에 잡아주는 것</h2>
+    <div class="grid2">
+      <div class="panel">
+        <h3 style="margin-top:0">자기 자신 상속 금지</h3>
+        <div class="codebox" style="font-size:12.5px"><span class="cm">// class Oops &lt; Oops {}</span>
+<span class="kw">if</span> (superclass 이름
+      == 클래스 이름)
+  Lox.error(...,
+    <span class="st">"A class can't</span>
+<span class="st">     inherit from itself."</span>);</div>
+      </div>
+      <div class="panel">
+        <h3 style="margin-top:0">super 사용 위치 검사</h3>
+        <div class="codebox" style="font-size:12.5px"><span class="cm">// visitSuperExpr</span>
+<span class="kw">if</span> (currentClass==NONE)
+  Lox.error(<span class="st">"Can't use 'super'</span>
+<span class="st">    outside of a class."</span>);
+<span class="kw">else if</span> (currentClass
+         != SUBCLASS)
+  Lox.error(<span class="st">"Can't use 'super'</span>
+<span class="st">    in a class with</span>
+<span class="st">    no superclass."</span>);</div>
+      </div>
+    </div>
+    <div class="note"><b>ClassType 확장</b> — 기존 <code>NONE / CLASS</code>에 <code>SUBCLASS</code>를 추가. 부모 있는 클래스 안에서만 <code>super</code>가 허용된다. <b>런타임 검사(Superclass must be a class)</b>와는 역할이 분리.</div>
+  </section>
+
+  <!-- 13. 전체 흐름 -->
+  <section class="slide">
+    <h2>한눈에 보는 super.cook() 한 줄</h2>
+    <p class="sub"><code>BostonCream &lt; Doughnut</code> 에서 <code>BostonCream().cook()</code> 호출 시</p>
+    <div class="pipe">
+      <div class="pnode on"><b>1. get</b>cook 조회<br>findMethod</div>
+      <span class="parr">→</span>
+      <div class="pnode on"><b>2. bind</b>this→인스턴스<br>메서드 실행</div>
+      <span class="parr">→</span>
+      <div class="pnode on"><b>3. super.cook</b>super 환경에서<br>Doughnut 꺼냄</div>
+      <span class="parr">→</span>
+      <div class="pnode on"><b>4. findMethod</b>Doughnut.cook<br>bind(this)</div>
+    </div>
+    <div class="grid2">
+      <div class="good"><b>오버라이드</b> — <code>BostonCream.cook</code>이 먼저 잡혀 자식 버전 실행.</div>
+      <div class="good"><b>super.cook</b> — 부모 <code>Doughnut.cook</code>을 같은 인스턴스에 bind해 실행 → 둘 다 찍힌다.</div>
+    </div>
+  </section>
+
+  <!-- 14. 정리 -->
+  <section class="slide">
+    <h2>정리</h2>
+    <div class="grid2">
+      <div class="panel">
+        <h3 style="margin-top:0">추가된 것</h3>
+        <p style="margin:6px 0 2px"><b class="pr">새 AST / 필드</b></p>
+        <span class="tag">Expr.Super</span><span class="tag">Stmt.Class.superclass</span>
+        <p style="margin:14px 0 2px"><b class="pr">런타임</b></p>
+        <ul style="margin:4px 0 0">
+          <li><code>LoxClass.superclass</code> 필드 1개</li>
+          <li><code>findMethod</code> → 부모로 재귀 위임</li>
+          <li><code>super</code> 환경 한 겹 (this 바깥)</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3 style="margin-top:0">핵심 통찰</h3>
+        <ul style="margin:6px 0 0">
+          <li>상속 = <code>findMethod</code> <b>부모 위임</b>이 전부</li>
+          <li>오버라이드는 <b>자식 먼저 조회</b>로 공짜</li>
+          <li>부모는 <b>변수처럼 평가</b> (Expr.Variable)</li>
+          <li><span class="pp">super</span>는 <b>선언 위치</b>의 부모 (정적)</li>
+          <li>super 환경 + <code>distance-1</code>로 <code>this</code> 회수</li>
+          <li>자기상속·잘못된 super는 <b>Resolver</b>가 차단</li>
+        </ul>
+      </div>
+    </div>
+    <p class="muted" style="font-size:15px; margin-top:18px">이로써 <b>jlox 완성</b> — 다음은 <b>Part III: clox</b>, C로 바이트코드 VM을 처음부터.</p>
+  </section>
+
+</div>
+
+<div class="hint">← → 이동 · F 전체화면</div>
+<div class="pageno" id="pageno">1 / 14</div>
+<div class="nav">
+  <button onclick="go(-1)">‹ 이전</button>
+  <button onclick="go(1)">다음 ›</button>
+</div>
+<div class="bar"><i id="bar"></i></div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let i=0;
+function render(){
+  slides.forEach((s,n)=>s.classList.toggle('active',n===i));
+  document.getElementById('pageno').textContent=(i+1)+' / '+slides.length;
+  document.getElementById('bar').style.width=((i+1)/slides.length*100)+'%';
+}
+function go(d){ i=Math.min(slides.length-1,Math.max(0,i+d)); render(); }
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){go(1); e.preventDefault();}
+  else if(e.key==='ArrowLeft'){go(-1);}
+  else if(e.key==='Home'){i=0;render();}
+  else if(e.key==='End'){i=slides.length-1;render();}
+  else if(e.key.toLowerCase()==='f'){
+    if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+});
+render();
+</script>
+</body>
+</html>
